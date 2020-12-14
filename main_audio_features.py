@@ -59,8 +59,8 @@ encoder = LabelEncoder()
 y = encoder.fit_transform(genre_list)
 scaler = StandardScaler()
 X = scaler.fit_transform(np.array(data.iloc[:, :-1], dtype = float))
-x_train_i, x_test, y_train_i, y_test = train_test_split(X, y, test_size=0.2)
-x_train, x_val, y_train, y_val = train_test_split(x_train_i, y_train_i, test_size=0.2)
+x_train_i, x_test, y_train_i, y_test = train_test_split(X, y, shuffle=True, test_size=0.2)
+x_train, x_val, y_train, y_val = train_test_split(x_train_i, y_train_i, shuffle=True, test_size=0.2)
 
 model = models.Sequential()
 model.add(layers.Dense(512, activation='relu', input_shape=(x_train.shape[1],)))
@@ -73,7 +73,9 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 history = model.fit(x_train,
                     y_train,
-                    epochs=20,
+                    epochs=40,
                     batch_size=512,
                     validation_data=(x_val, y_val))
 results = model.evaluate(x_test, y_test)
+
+# %%
