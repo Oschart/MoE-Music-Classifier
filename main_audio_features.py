@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-%matplotlib inline
+#%matplotlib inline
 import os
 from PIL import Image
 import pathlib
@@ -18,10 +18,12 @@ from AudioExpert import AudioExpert
 #Keras
 import keras
 
+from ImageExpert import ImageExpert
+
 import warnings
 warnings.filterwarnings('ignore')
 
-GENERATE_AUDIO_FEATURES = True
+GENERATE_AUDIO_FEATURES = False
 header = 'filename chroma_stft rms spectral_centroid spectral_bandwidth rolloff zero_crossing_rate'
 genres = ['blues', 'classical', 'country',  'disco',  'hiphop',  'jazz',  'metal',  'pop',  'reggae',  'rock']
 AUDIO_FEATURES_PATH = 'GTZAN/audio_features.csv'
@@ -62,20 +64,13 @@ X = scaler.fit_transform(np.array(data.iloc[:, :-1], dtype = float))
 x_train_i, x_test, y_train_i, y_test = train_test_split(X, y, shuffle=True, test_size=0.2)
 x_train, x_val, y_train, y_val = train_test_split(x_train_i, y_train_i, shuffle=True, test_size=0.2)
 
-model = models.Sequential()
-model.add(layers.Dense(512, activation='relu', input_shape=(x_train.shape[1],)))
-model.add(layers.Dense(256, activation='relu'))
-model.add(layers.Dense(128, activation='relu'))
-model.add(layers.Dense(64, activation='relu'))
-model.add(layers.Dense(10, activation='softmax'))
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-history = model.fit(x_train,
+img_expert = ImageExpert()
+img_expert.build(input_shape=(x_train.shape[1],))
+history = img_expert.fit(x_train,
                     y_train,
                     epochs=40,
                     batch_size=512,
                     validation_data=(x_val, y_val))
-results = model.evaluate(x_test, y_test)
+results = img_expert.evaluate(x_test, y_test)
 
 # %%
