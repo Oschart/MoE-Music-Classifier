@@ -18,7 +18,7 @@ from AudioExpert import AudioExpert
 #Keras
 import keras
 
-from ImageExpert import ImageExpert
+from TerminalExpert import TerminalExpert
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -64,13 +64,13 @@ X = scaler.fit_transform(np.array(data.iloc[:, :-1], dtype = float))
 x_train_i, x_test, y_train_i, y_test = train_test_split(X, y, shuffle=True, test_size=0.2)
 x_train, x_val, y_train, y_val = train_test_split(x_train_i, y_train_i, shuffle=True, test_size=0.2)
 
-img_expert = ImageExpert()
-img_expert.build(input_shape=(x_train.shape[1],))
-history = img_expert.fit(x_train,
+expert = TerminalExpert()
+expert.build(input_shape=(x_train.shape[1],))
+history = expert.fit(x_train,
                     y_train,
                     epochs=40,
                     batch_size=512,
                     validation_data=(x_val, y_val))
-results = img_expert.evaluate(x_test, y_test)
+results = expert.evaluate(x_test, y_test)
 
 # %%
