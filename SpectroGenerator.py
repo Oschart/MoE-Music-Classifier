@@ -75,9 +75,9 @@ class SpectroGenerator():
                 y,sr = librosa.load(song,duration=3)
                 mels = librosa.feature.melspectrogram(y=y,sr=sr)
                 fig = plt.Figure()
-                canvas = FigureCanvas(fig)
+                #canvas = FigureCanvas(fig)
                 print(j)
-                p = plt.imshow(librosa.power_to_db(mels,ref=np.max))
+                #p = plt.imshow(librosa.power_to_db(mels,ref=np.max))
                 plt.savefig(f'image_data/spectrograms3sec/train/{g}/{g+str(j)}.png')
 
     def split_test_files(self):
@@ -88,6 +88,7 @@ class SpectroGenerator():
             test_files = filenames[0:100]
 
             for f in test_files:
-                shutil.move(train_dir + f"{g}"+ "/" + f,"/image_data/spectrograms3sec/test/" + f"{g}")
+                shutil.move(train_dir + f"{g}"+ "/" + f,"image_data/spectrograms3sec/test/" + f"{g}")
 
                 
+# %%

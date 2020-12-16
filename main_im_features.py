@@ -27,6 +27,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import random
 
 from SpectroGenerator import SpectroGenerator
+from SpectroExpert import SpectroExpert
 # %%
 
 spec_gen = SpectroGenerator()
@@ -36,14 +37,15 @@ spec_gen.generate_wav_segs()
 # %%
 spec_gen.generate_spectrograms()
 # %%
+spec_gen = SpectroGenerator()
 spec_gen.split_test_files()
 
 # %%
-train_dir = "/image_data/spectrograms3sec/train/"
+train_dir = "image_data/spectrograms3sec/train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
 train_generator = train_datagen.flow_from_directory(train_dir,target_size=(288,432),color_mode="rgba",class_mode='categorical',batch_size=128)
 
-validation_dir = "/image_data/spectrograms3sec/test/"
+validation_dir = "image_data/spectrograms3sec/test/"
 vali_datagen = ImageDataGenerator(rescale=1./255)
 vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=(288,432),color_mode='rgba',class_mode='categorical',batch_size=128)
 
@@ -85,3 +87,13 @@ def GenreModel(input_shape = (288,432,4),classes=9):
     model = Model(inputs=X_input,outputs=X,name='GenreModel')
 
     return model
+
+#%%
+from SpectroExpert import SpectroExpert
+print(train_generator.class_indices)
+spec_exp = SpectroExpert()
+spec_exp.build(input_shape=(288,432,4), classes=5)
+spec_exp.fit_gen(train_generator,epochs=70,validation_data=vali_generator, shuffle=True)
+# %%
+
+
