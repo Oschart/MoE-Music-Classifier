@@ -25,61 +25,18 @@ from pydub import AudioSegment
 import shutil
 from keras.preprocessing.image import ImageDataGenerator
 import random
-# %%
-os.makedirs('image_data/spectrograms3sec')
-os.makedirs('image_data/spectrograms3sec/train')
-os.makedirs('image_data/spectrograms3sec/test')
-#%%
-wav_dir = 'GTZAN/genres_original/'
-genres = 'hiphop jazz metal reggae rock'.split()
-# %%
-for g in genres:
-    path_audio ='image_data/audio3sec/'+g
-    os.makedirs(path_audio)
-    path_train = 'image_data/spectrograms3sec/train/'+g
-    path_test = 'image_data/spectrograms3sec/test/'+g
-    os.makedirs(path_train)
-    os.makedirs(path_test)
-# %%
-from pydub import AudioSegment
-i = 0
-for g in genres:
-    j=0
-    print(f"{g}")
-    for filename in os.listdir(wav_dir+'/'+g):
-        songname = wav_dir+g+'/'+filename
-        j = j+1
-        for w in range(0,10):
-            i = i+1
-            #print(i)
-            t1 = 3*(w)*1000
-            t2 = 3*(w+1)*1000
-            newAudio = AudioSegment.from_wav(songname)
-            new = newAudio[t1:t2]
-            new.export(f'image_data/audio3sec/{g}/{g+str(j)+str(w)}.wav', format="wav")
-# %%
-for g in genres:
-    j = 0
-    print(g)
-    for filename in os.listdir('image_data/audio3sec/'+g):
-        song  =  'image_data/audio3sec/'+g+'/'+filename
-        j = j+1
-        y,sr = librosa.load(song,duration=3)
-        mels = librosa.feature.melspectrogram(y=y,sr=sr)
-        fig = plt.Figure()
-        canvas = FigureCanvas(fig)
-        print(j)
-        p = plt.imshow(librosa.power_to_db(mels,ref=np.max))
-        plt.savefig(f'image_data/spectrograms3sec/train/{g}/{g+str(j)}.png')
-# %%
-directory = "image_data/spectrograms3sec/train/"
-for g in genres:
-    filenames = os.listdir(os.path.join(directory,f"{g}"))
-    random.shuffle(filenames)
-    test_files = filenames[0:100]
 
-    for f in test_files:
-        shutil.move(directory + f"{g}"+ "/" + f,"/image_data/spectrograms3sec/test/" + f"{g}")
+from SpectroGenerator import SpectroGenerator
+# %%
+
+spec_gen = SpectroGenerator()
+spec_gen.create_dirs()
+spec_gen.generate_wav_segs()
+
+# %%
+spec_gen.generate_spectrograms()
+# %%
+spec_gen.split_test_files()
 
 # %%
 train_dir = "/image_data/spectrograms3sec/train/"
@@ -103,7 +60,7 @@ def GenreModel(input_shape = (288,432,4),classes=9):
     X = Activation('relu')(X)
     X = MaxPooling2D((2,2))(X)
 
-    X = Conv2D(32,kernel_size=(3,3),strides = (1,1)))(X)
+    X = Conv2D(32,kernel_size=(3,3),strides = (1,1))(X)
     X = BatchNormalization(axis=3)(X)
     X = Activation('relu')(X)
     X = MaxPooling2D((2,2))(X)
