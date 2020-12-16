@@ -70,25 +70,28 @@ class SpectroGenerator():
             j = 0
             print(g)
             for filename in os.listdir('image_data/audio3sec/'+g):
-                song  =  'image_data/audio3sec/'+g+'/'+filename
+                song = 'image_data/audio3sec/'+g+'/'+filename
                 j = j+1
-                y,sr = librosa.load(song,duration=3)
-                mels = librosa.feature.melspectrogram(y=y,sr=sr)
+                y, sr = librosa.load(song, duration=3)
+                mels = librosa.feature.melspectrogram(y=y, sr=sr)
                 fig = plt.Figure()
-                #canvas = FigureCanvas(fig)
+                canvas = FigureCanvas(fig)
                 print(j)
-                #p = plt.imshow(librosa.power_to_db(mels,ref=np.max))
-                plt.savefig(f'image_data/spectrograms3sec/train/{g}/{g+str(j)}.png')
+                p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
+                plt.savefig(
+                    f'image_data/spectrograms3sec/train/{g}/{g+str(j)}.png')
+                plt.cla()
 
     def split_test_files(self):
         train_dir = "image_data/spectrograms3sec/train/"
         for g in self.genres:
-            filenames = os.listdir(os.path.join(train_dir,f"{g}"))
+            filenames = os.listdir(os.path.join(train_dir, f"{g}"))
             random.shuffle(filenames)
             test_files = filenames[0:100]
 
             for f in test_files:
-                shutil.move(train_dir + f"{g}"+ "/" + f,"image_data/spectrograms3sec/test/" + f"{g}")
+                shutil.move(
+                    train_dir + f"{g}" + "/" + f, "image_data/spectrograms3sec/test/" + f"{g}")
 
-                
+
 # %%
