@@ -31,7 +31,7 @@ from SpectroExpert import SpectroExpert
 
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # %%
-
+print("trying git")
 spec_gen = SpectroGenerator()
 spec_gen.create_dirs()
 # %%
