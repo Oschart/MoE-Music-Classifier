@@ -9,7 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import librosa
 from keras import layers
-from keras.layers import (Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, 
+from keras.layers import (Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten,
                           Conv2D, AveragePooling2D, Dropout, MaxPooling2D, GlobalMaxPooling2D)
 from keras.models import Model, load_model
 from keras.preprocessing import image
@@ -34,7 +34,7 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 spec_gen = SpectroGenerator()
 spec_gen.create_dirs()
-#%%
+# %%
 spec_gen.generate_wav_segs()
 
 # %%
@@ -45,26 +45,29 @@ spec_gen.split_test_files()
 # %%
 train_dir = "image_data/spectrograms3sec/train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
-img_size = (100,200)
-img_size_rgba = (100,200, 4)
-train_generator = train_datagen.flow_from_directory(train_dir,target_size=img_size,color_mode="rgba",class_mode='categorical',batch_size=128)
+img_size = (250, 400)
+img_size_rgba = (*img_size, 4)
+batch_size = 64
+train_generator = train_datagen.flow_from_directory(
+    train_dir, target_size=img_size, color_mode="rgba", class_mode='categorical', batch_size=batch_size)
 
 validation_dir = "image_data/spectrograms3sec/test/"
 vali_datagen = ImageDataGenerator(rescale=1./255)
-vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=img_size,color_mode='rgba',class_mode='categorical',batch_size=128)
+vali_generator = vali_datagen.flow_from_directory(
+    validation_dir, target_size=img_size, color_mode='rgba', class_mode='categorical', batch_size=batch_size)
 
 
-#%%
-from SpectroExpert import SpectroExpert
+# %%
 print(train_generator.class_indices)
 spec_exp = SpectroExpert()
 spec_exp.build(input_shape=img_size_rgba, learning_rate=0.005, classes=10)
-spec_exp.fit_gen(train_generator,epochs=70,validation_data=vali_generator, shuffle=True)
+spec_exp.fit_gen(train_generator, epochs=70,
+                 validation_data=vali_generator, shuffle=True)
 # %%
 
 
-#%%
-import tensorflow as tf
-print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+# %%
+print("Num GPUs Available: ", len(
+    tf.config.experimental.list_physical_devices('GPU')))
 
 # %%

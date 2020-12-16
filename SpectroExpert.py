@@ -40,16 +40,18 @@ class SpectroExpert():
         self.y_train = None
         self.model = None
 
-    def build(self, input_shape, learning_rate=0.01, classes=9):
+    def build(self, input_shape, learning_rate=0.0005, classes=9):
         self.model = models.Sequential([
             layers.Conv2D(32, 5, activation='relu', input_shape=input_shape),
             layers.BatchNormalization(axis=3),
-            layers.Activation('relu'),
             layers.MaxPooling2D((5, 5)),
 
-            layers.Conv2D(32, 5, activation='relu'),
+            layers.Conv2D(64, 5, activation='relu'),
             layers.BatchNormalization(axis=3),
-            layers.Activation('relu'),
+            layers.MaxPooling2D((5, 5)),
+
+            layers.Conv2D(64, 5, activation='relu'),
+            layers.BatchNormalization(axis=3),
             layers.MaxPooling2D((5, 5)),
 
             layers.Flatten(),
