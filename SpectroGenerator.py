@@ -9,7 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import librosa
 from keras import layers
-from keras.layers import (Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, 
+from keras.layers import (Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten,
                           Conv2D, AveragePooling2D, Dropout, MaxPooling2D, GlobalMaxPooling2D)
 from keras.models import Model, load_model
 from keras.preprocessing import image
@@ -27,7 +27,6 @@ from keras.preprocessing.image import ImageDataGenerator
 import random
 
 
-
 class SpectroGenerator():
 
     def __init__(self):
@@ -35,35 +34,37 @@ class SpectroGenerator():
         self.genres = 'pop blues country disco classical hiphop jazz metal reggae rock'.split()
 
     def create_dirs(self):
-        os.makedirs('image_data/spectrograms3sec')
-        os.makedirs('image_data/spectrograms3sec/train')
-        os.makedirs('image_data/spectrograms3sec/test')
+        os.makedirs('image_data/spectrograms3sec', exist_ok=True)
+        os.makedirs('image_data/spectrograms3sec/train', exist_ok=True)
+        os.makedirs('image_data/spectrograms3sec/test', exist_ok=True)
 
         for g in self.genres:
-            path_audio ='image_data/audio3sec/'+g
-            os.makedirs(path_audio)
+            path_audio = 'image_data/audio3sec/'+g
+            os.makedirs(path_audio, exist_ok=True)
             path_train = 'image_data/spectrograms3sec/train/'+g
             path_test = 'image_data/spectrograms3sec/test/'+g
-            os.makedirs(path_train)
-            os.makedirs(path_test)
 
-    def generate_wav_segs(self):
+            os.makedirs(path_train, exist_ok=True)
+            os.makedirs(path_test, exist_ok=True)
+
+    def generate_wav_segs(self, n_split=3):
         from pydub import AudioSegment
         i = 0
         for g in self.genres:
-            j=0
+            j = 0
             print(f"{g}")
             for filename in os.listdir(self.wav_dir+'/'+g):
                 songname = self.wav_dir+g+'/'+filename
                 j = j+1
-                for w in range(0,3):
+                for w in range(0, n_split):
                     i = i+1
-                    #print(i)
-                    t1 = 3*(w)*1000
-                    t2 = 3*(w+1)*1000
+                    # print(i)
+                    t1 = (30//n_split)*(w)*1000
+                    t2 = (30//n_split)*(w+1)*1000
                     newAudio = AudioSegment.from_wav(songname)
                     new = newAudio[t1:t2]
-                    new.export(f'image_data/audio3sec/{g}/{g+str(j)+str(w)}.wav', format="wav")
+                    new.export(
+                        f'image_data/audio3sec/{g}/{g+str(j)+str(w)}.wav', format="wav")
 
     def generate_spectrograms(self):
         for g in self.genres:
