@@ -3,6 +3,7 @@ import glob
 import os
 import random
 import shutil
+from tqdm import tqdm
 
 import librosa
 import matplotlib.pyplot as plt
@@ -48,48 +49,35 @@ class SpectroGenerator():
                 os.makedirs(path, exist_ok=True)
 
     def generate_wav_segs(self, n_split=3):
-        for g in self.genres:
-            i = 0
-            print(f"{g}")
-            for filename in os.listdir(self.wav_dir+'/'+g):
-                songname = self.wav_dir+g+'/'+filename
-                for w in range(0, n_split):
-                    i = i+1
-                    # print(i)
-                    t1 = (30//n_split)*(w)*1000
-                    t2 = (30//n_split)*(w+1)*1000
-                    newAudio = AudioSegment.from_wav(songname)
-                    new = newAudio[t1:t2]
-                    new.export(
-                        f'{self.data_dir}/train/split_audio/{g}/{g+str(i)}.wav', format="wav")
+        for mode in ['train', 'test']:
+            for g in self.genres:
+                i = 0
+                for filename in tqdm(os.listdir(self.wav_dir+'/'+g), desc=f'segmenting {g}'):
+                    songname = self.wav_dir+g+'/'+filename
+                    for w in range(0, n_split):
+                        i = i+1
+                        t1 = (30//n_split)*(w)*1000
+                        t2 = (30//n_split)*(w+1)*1000
+                        newAudio = AudioSegment.from_wav(songname)
+                        new = newAudio[t1:t2]
+                        new.export(
+                            f'{self.data_dir}/{mode}/split_audio/{g}/{g+str(i)}.wav', format="wav")
 
     def generate_spectrograms(self):
-        for g in self.genres:
-            j = 0
-            print(g)
-            for filename in os.listdir(f'{self.data_dir}/train/split_audio/{g}'):
-                song = f'{self.data_dir}/train/split_audio/{g}/{filename}'
-                j = j+1
-                y, sr = librosa.load(song, duration=3)
-                mels = librosa.feature.melspectrogram(y=y, sr=sr)
-                fig = plt.Figure()
-                canvas = FigureCanvas(fig)
-                print(j)
-                p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
-                plt.savefig(
-                    f'{self.data_dir}/train/spectrograms/{g}/{g+str(j)}.png')
-                plt.cla()
-
-    def split_test_files(self):
-        train_dir = f'{self.data_dir}/train/spectrograms/'
-        for g in self.genres:
-            filenames = os.listdir(os.path.join(train_dir, f"{g}"))
-            random.shuffle(filenames)
-            test_files = filenames[0:100]
-
-            for f in test_files:
-                shutil.move(
-                    train_dir + f"{g}" + "/" + f, f'{self.data_dir}/test/spectrograms/{g}')
+        for mode in ['train', 'test']:
+            for g in self.genres:
+                j = 0
+                for filename in tqdm(os.listdir(f'{self.data_dir}/{mode}/split_audio/{g}'), desc=f'spectrogramming {g}'):
+                    song = f'{self.data_dir}/{mode}/split_audio/{g}/{filename}'
+                    j = j+1
+                    y, sr = librosa.load(song, duration=3)
+                    mels = librosa.feature.melspectrogram(y=y, sr=sr)
+                    fig = plt.Figure()
+                    canvas = FigureCanvas(fig)
+                    p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
+                    plt.savefig(
+                        f'{self.data_dir}/{mode}/spectrograms/{g}/{g+str(j)}.png')
+                    plt.cla()
 
 
 # %%
