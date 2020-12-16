@@ -28,10 +28,13 @@ import random
 
 from SpectroGenerator import SpectroGenerator
 from SpectroExpert import SpectroExpert
+
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # %%
 
 spec_gen = SpectroGenerator()
 spec_gen.create_dirs()
+#%%
 spec_gen.generate_wav_segs()
 
 # %%
@@ -42,57 +45,26 @@ spec_gen.split_test_files()
 # %%
 train_dir = "image_data/spectrograms3sec/train/"
 train_datagen = ImageDataGenerator(rescale=1./255)
-train_generator = train_datagen.flow_from_directory(train_dir,target_size=(288,432),color_mode="rgba",class_mode='categorical',batch_size=128)
+img_size = (100,200)
+img_size_rgba = (100,200, 4)
+train_generator = train_datagen.flow_from_directory(train_dir,target_size=img_size,color_mode="rgba",class_mode='categorical',batch_size=128)
 
 validation_dir = "image_data/spectrograms3sec/test/"
 vali_datagen = ImageDataGenerator(rescale=1./255)
-vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=(288,432),color_mode='rgba',class_mode='categorical',batch_size=128)
+vali_generator = vali_datagen.flow_from_directory(validation_dir,target_size=img_size,color_mode='rgba',class_mode='categorical',batch_size=128)
 
-# %%
-def GenreModel(input_shape = (288,432,4),classes=9):
-    X_input = Input(input_shape)
-    X = Conv2D(8,kernel_size=(3,3),strides=(1,1))(X_input)
-    X = BatchNormalization(axis=3)(X)
-    X = Activation('relu')(X)
-    X = MaxPooling2D((2,2))(X)
-
-    X = Conv2D(16,kernel_size=(3,3),strides = (1,1))(X)
-    X = BatchNormalization(axis=3)(X)
-    X = Activation('relu')(X)
-    X = MaxPooling2D((2,2))(X)
-
-    X = Conv2D(32,kernel_size=(3,3),strides = (1,1))(X)
-    X = BatchNormalization(axis=3)(X)
-    X = Activation('relu')(X)
-    X = MaxPooling2D((2,2))(X)
-
-    X = Conv2D(64,kernel_size=(3,3),strides=(1,1))(X)
-    X = BatchNormalization(axis=-1)(X)
-    X = Activation('relu')(X)
-    X = MaxPooling2D((2,2))(X)
-
-    X = Conv2D(128,kernel_size=(3,3),strides=(1,1))(X)
-    X = BatchNormalization(axis=-1)(X)
-    X = Activation('relu')(X)
-    X = MaxPooling2D((2,2))(X)
-
-
-    X = Flatten()(X)
-
-    X = Dropout(rate=0.3)
-
-    X = Dense(classes, activation='softmax', name='fc' + str(classes))(X)
-
-    model = Model(inputs=X_input,outputs=X,name='GenreModel')
-
-    return model
 
 #%%
 from SpectroExpert import SpectroExpert
 print(train_generator.class_indices)
 spec_exp = SpectroExpert()
-spec_exp.build(input_shape=(288,432,4), classes=10)
+spec_exp.build(input_shape=img_size_rgba, learning_rate=0.005, classes=10)
 spec_exp.fit_gen(train_generator,epochs=70,validation_data=vali_generator, shuffle=True)
 # %%
 
 
+#%%
+import tensorflow as tf
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
+
+# %%
