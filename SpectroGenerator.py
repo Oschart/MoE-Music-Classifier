@@ -32,7 +32,7 @@ class SpectroGenerator():
 
     def __init__(self):
         self.wav_dir = 'GTZAN/genres_original/'
-        self.genres = 'hiphop jazz metal reggae rock'.split()
+        self.genres = 'pop blues country disco classical hiphop jazz metal reggae rock'.split()
 
     def create_dirs(self):
         os.makedirs('image_data/spectrograms3sec')

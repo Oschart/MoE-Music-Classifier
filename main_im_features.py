@@ -37,7 +37,6 @@ spec_gen.generate_wav_segs()
 # %%
 spec_gen.generate_spectrograms()
 # %%
-spec_gen = SpectroGenerator()
 spec_gen.split_test_files()
 
 # %%
@@ -92,7 +91,7 @@ def GenreModel(input_shape = (288,432,4),classes=9):
 from SpectroExpert import SpectroExpert
 print(train_generator.class_indices)
 spec_exp = SpectroExpert()
-spec_exp.build(input_shape=(288,432,4), classes=5)
+spec_exp.build(input_shape=(288,432,4), classes=10)
 spec_exp.fit_gen(train_generator,epochs=70,validation_data=vali_generator, shuffle=True)
 # %%
 
