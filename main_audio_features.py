@@ -19,10 +19,12 @@ from AudioExpert import AudioExpert
 import keras
 
 from TerminalExpert import TerminalExpert
-
+from AudioGenerator import AudioGenerator
+from AudioExpert import AudioExpert
 import warnings
 warnings.filterwarnings('ignore')
 
+# %%
 GENERATE_AUDIO_FEATURES = False
 header = 'filename chroma_stft rms spectral_centroid spectral_bandwidth rolloff zero_crossing_rate'
 genres = ['blues', 'classical', 'country',  'disco',  'hiphop',  'jazz',  'metal',  'pop',  'reggae',  'rock']
