@@ -34,29 +34,25 @@ class SpectroGenerator():
     def __init__(self):
         self.wav_dir = 'GTZAN/genres_original/'
         self.genres = 'pop blues country disco classical hiphop jazz metal reggae rock'.split()
+        self.data_dir = 'processed_data'
 
     def create_dirs(self):
-        os.makedirs('image_data/spectrograms3sec', exist_ok=True)
-        os.makedirs('image_data/spectrograms3sec/train', exist_ok=True)
-        os.makedirs('image_data/spectrograms3sec/test', exist_ok=True)
+        os.makedirs('%s/train/spectrograms' % self.data_dir, exist_ok=True)
+        os.makedirs('%s/test/spectrograms' % self.data_dir, exist_ok=True)
 
-        for g in self.genres:
-            path_audio = 'image_data/audio3sec/'+g
-            os.makedirs(path_audio, exist_ok=True)
-            path_train = 'image_data/spectrograms3sec/train/'+g
-            path_test = 'image_data/spectrograms3sec/test/'+g
-
-            os.makedirs(path_train, exist_ok=True)
-            os.makedirs(path_test, exist_ok=True)
+        for mode in ['train', 'test']:
+            for g in self.genres:
+                path_audio = '%s/%s/split_audio/%s' % (self.data_dir, mode, g)
+                os.makedirs(path_audio, exist_ok=True)
+                path = '%s/%s/spectrograms/%s' % (self.data_dir, mode, g)
+                os.makedirs(path, exist_ok=True)
 
     def generate_wav_segs(self, n_split=3):
         for g in self.genres:
             i = 0
-            j = 0
             print(f"{g}")
             for filename in os.listdir(self.wav_dir+'/'+g):
                 songname = self.wav_dir+g+'/'+filename
-                j = j+1
                 for w in range(0, n_split):
                     i = i+1
                     # print(i)
@@ -65,14 +61,14 @@ class SpectroGenerator():
                     newAudio = AudioSegment.from_wav(songname)
                     new = newAudio[t1:t2]
                     new.export(
-                        f'image_data/audio3sec/{g}/{g+str(i)}.wav', format="wav")
+                        f'{self.data_dir}/train/split_audio/{g}/{g+str(i)}.wav', format="wav")
 
     def generate_spectrograms(self):
         for g in self.genres:
             j = 0
             print(g)
-            for filename in os.listdir('image_data/audio3sec/'+g):
-                song = 'image_data/audio3sec/'+g+'/'+filename
+            for filename in os.listdir(f'{self.data_dir}/train/split_audio/{g}'):
+                song = f'{self.data_dir}/train/split_audio/{g}/{filename}'
                 j = j+1
                 y, sr = librosa.load(song, duration=3)
                 mels = librosa.feature.melspectrogram(y=y, sr=sr)
@@ -81,11 +77,11 @@ class SpectroGenerator():
                 print(j)
                 p = plt.imshow(librosa.power_to_db(mels, ref=np.max))
                 plt.savefig(
-                    f'image_data/spectrograms3sec/train/{g}/{g+str(j)}.png')
+                    f'{self.data_dir}/train/spectrograms/{g}/{g+str(j)}.png')
                 plt.cla()
 
     def split_test_files(self):
-        train_dir = "image_data/spectrograms3sec/train/"
+        train_dir = f'{self.data_dir}/train/spectrograms/'
         for g in self.genres:
             filenames = os.listdir(os.path.join(train_dir, f"{g}"))
             random.shuffle(filenames)
@@ -93,7 +89,7 @@ class SpectroGenerator():
 
             for f in test_files:
                 shutil.move(
-                    train_dir + f"{g}" + "/" + f, "image_data/spectrograms3sec/test/" + f"{g}")
+                    train_dir + f"{g}" + "/" + f, f'{self.data_dir}/test/spectrograms/{g}')
 
 
 # %%
