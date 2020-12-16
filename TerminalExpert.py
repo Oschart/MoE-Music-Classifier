@@ -23,13 +23,13 @@ class TerminalExpert():
         self.y_train = None
         self.model = None
         
-    def build(self, input_shape):
+    def build(self, input_shape, classes=10):
         self.model = models.Sequential([
             layers.Dense(512, activation='relu', input_shape=input_shape),
             layers.Dense(256, activation='relu'),
             layers.Dense(128, activation='relu'),
             layers.Dense(64, activation='relu'),
-            layers.Dense(10, activation='softmax')
+            layers.Dense(classes, activation='softmax')
         ])
         self.model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
