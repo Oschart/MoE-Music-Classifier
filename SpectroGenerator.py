@@ -1,30 +1,32 @@
 # %%
-import tensorflow as tf
-import numpy as np
-import scipy
-from scipy import misc
 import glob
-from PIL import Image
 import os
-import matplotlib.pyplot as plt
-import librosa
-from keras import layers
-from keras.layers import (Input, Add, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten,
-                          Conv2D, AveragePooling2D, Dropout, MaxPooling2D, GlobalMaxPooling2D)
-from keras.models import Model, load_model
-from keras.preprocessing import image
-from keras.utils import layer_utils
-import pydot
-from IPython.display import SVG
-from keras.utils.vis_utils import model_to_dot
-from keras.utils import plot_model
-from keras.optimizers import Adam
-from keras.initializers import glorot_uniform
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from pydub import AudioSegment
-import shutil
-from keras.preprocessing.image import ImageDataGenerator
 import random
+import shutil
+
+import librosa
+import matplotlib.pyplot as plt
+import numpy as np
+import pydot
+import scipy
+import tensorflow as tf
+from IPython.display import SVG
+from keras import layers
+from keras.initializers import glorot_uniform
+from keras.layers import (Activation, Add, AveragePooling2D,
+                          BatchNormalization, Conv2D, Dense, Dropout, Flatten,
+                          GlobalMaxPooling2D, Input, MaxPooling2D,
+                          ZeroPadding2D)
+from keras.models import Model, load_model
+from keras.optimizers import Adam
+from keras.preprocessing import image
+from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import layer_utils, plot_model
+from keras.utils.vis_utils import model_to_dot
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from PIL import Image
+from pydub import AudioSegment
+from scipy import misc
 
 
 class SpectroGenerator():
@@ -48,9 +50,8 @@ class SpectroGenerator():
             os.makedirs(path_test, exist_ok=True)
 
     def generate_wav_segs(self, n_split=3):
-        from pydub import AudioSegment
-        i = 0
         for g in self.genres:
+            i = 0
             j = 0
             print(f"{g}")
             for filename in os.listdir(self.wav_dir+'/'+g):
@@ -64,7 +65,7 @@ class SpectroGenerator():
                     newAudio = AudioSegment.from_wav(songname)
                     new = newAudio[t1:t2]
                     new.export(
-                        f'image_data/audio3sec/{g}/{g+str(j)+str(w)}.wav', format="wav")
+                        f'image_data/audio3sec/{g}/{g+str(i)}.wav', format="wav")
 
     def generate_spectrograms(self):
         for g in self.genres:
