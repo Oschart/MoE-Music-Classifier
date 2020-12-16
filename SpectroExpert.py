@@ -1,4 +1,4 @@
-#%%
+# %%
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,7 +16,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 import keras
 from keras import models, optimizers
 from keras import layers
-
+from keras.models import Model
 import warnings
 
 '''layers.Conv2D(32, 3,activation='relu'),
@@ -32,7 +32,9 @@ import warnings
             layers.Conv2D(128, 3, activation='relu'),
             layers.BatchNormalization(axis=3),
             layers.Activation('relu'),
-            layers.MaxPooling2D((5. 5)),'''
+            layers.MaxPooling2D((5. 5)),
+'''
+
 
 class SpectroExpert():
     def __init__(self):
@@ -40,7 +42,7 @@ class SpectroExpert():
         self.y_train = None
         self.model = None
 
-    def build(self, input_shape, learning_rate=0.0005, classes=9):
+    def build(self, input_shape, learning_rate=0.0005, classes=10):
         self.model = models.Sequential([
             layers.Conv2D(32, 5, activation='relu', input_shape=input_shape),
             layers.BatchNormalization(axis=3),
@@ -56,12 +58,13 @@ class SpectroExpert():
 
             layers.Flatten(),
             layers.Dropout(rate=0.5),
+            layers.Dense(128, activation='relu', name='out_features'),
 
             layers.Dense(classes, activation='softmax',
                          name='fc' + str(classes))
         ], name='SpectroModel')
         self.opt = optimizers.Adam(learning_rate=learning_rate)
-        self.model.compile(optimizer=self.opt, 
+        self.model.compile(optimizer=self.opt,
                            loss='categorical_crossentropy',
                            metrics=['accuracy'])
 
@@ -70,16 +73,25 @@ class SpectroExpert():
                                       y_train,
                                       **params)
         return self.history
-    
+
     def fit_gen(self, train_gen, **params):
         self.history = self.model.fit_generator(train_gen,
-                                      **params)
+                                                **params)
         return self.history
 
     def predict(self, x_test):
-        return self.model.predict(x_test)
+        return self.core_model.predict(x_test)
 
     def evaluate(self, x_test, y_test):
         return self.model.evaluate(x_test, y_test)
+
+    def build_core_model(self, learning_rate=0.0005):
+        self.core_model = Model(inputs=self.model.input,
+                                outputs=self.model.get_layer('out_features').output)
+        self.core_model.compile(optimizer=self.opt,
+                           loss='categorical_crossentropy',
+                           metrics=['accuracy'])
+        return self.core_model
+
 
 # %%
