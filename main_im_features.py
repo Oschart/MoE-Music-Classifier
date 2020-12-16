@@ -31,11 +31,11 @@ from SpectroExpert import SpectroExpert
 
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 # %%
-
+print("trying git")
 spec_gen = SpectroGenerator()
 spec_gen.create_dirs()
 # %%
-spec_gen.generate_wav_segs()
+spec_gen.generate_wav_segs(n_split=10)
 
 # %%
 spec_gen.generate_spectrograms()
