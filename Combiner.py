@@ -145,8 +145,29 @@ class Combiner():
         y_tr_labels = self.train_df['genre'].values
         y_ts_labels = self.test_df['genre'].values
         print("Done with concat_spect_aud!")
+        
+        self.y_train = y_train
+        self.y_test = y_test
 
         return x_train, x_test, y_train, y_test, y_tr_labels, y_ts_labels
+
+    def get_audio_ft(self):
+        from sklearn.preprocessing import OneHotEncoder, StandardScaler
+        self.enc = LabelEncoder()
+        self.scaler = StandardScaler()
+
+        labels_tr = np.array(self.train_df['genre']).reshape(-1, 1)
+        labels_ts = np.array(self.test_df['genre']).reshape(-1, 1)
+
+        x_train = np.array(self.train_dfx.values, dtype=float)
+        x_train = self.scaler.fit_transform(x_train)
+        y_train = self.enc.fit_transform(labels_tr)
+
+        x_test = np.array(self.test_dfx.values, dtype=float)
+        x_test = self.scaler.transform(x_test)
+        y_test = self.enc.transform(labels_ts)
+
+        return x_train, x_test, y_train, y_test
 
     def train_terminal_expert(self, x_train, x_test, y_train, y_test, epochs=200):
         self.terminal_expert.build(input_shape=x_train[0].shape, classes=10)
@@ -155,8 +176,18 @@ class Combiner():
                 validation_data=(x_test, y_test),\
                 epochs=epochs
                     )
-        return self.terminal_expert_hist
-    
+        test_loss, test_acc = self.terminal_expert.evaluate(x_test, y_test)
+        return self.terminal_expert_hist, test_loss, test_acc
+
+    def train_audio_expert(self, x_train, x_test, y_train, y_test, epochs=200):
+        self.audio_expert.build(input_shape=(x_train.shape[1],), classes=10)
+        self.audio_expert_hist = self.audio_expert.fit(x_train, y_train,\
+                batch_size=self.batch_size,\
+                epochs=epochs
+                )
+        test_loss, test_acc = self.audio_expert.evaluate(x_test, y_test)
+        return self.audio_expert_hist, test_loss, test_acc
+
     def save_model(self, obj, filename):
         with open(filename+'.pickle', 'wb') as output:  # Overwrites any existing file.
             pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)

@@ -33,9 +33,13 @@ from Combiner import Combiner
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 comb = Combiner()
 comb.build_experts()
-
+# %%
 spect_hist = comb.train_spectro_expert(epochs=1)
 x_train, x_test, y_train, y_test, _, _ = comb.concat_spect_aud()
-terminal_hist = comb.train_terminal_expert(x_train, x_test, y_train, y_test)
-
+terminal_hist, test_loss, test_acc = comb.train_terminal_expert(x_train, x_test, y_train, y_test, epochs=1000)
+# %%
 # print(hist.history.keys())
+x_train, x_test, y_train, y_test= comb.get_audio_ft()
+audio_hist, acc, ls = comb.train_audio_expert(x_train, x_test,\
+        y_train, y_test, epochs=1000)
+# accuracy 71 on audio only
