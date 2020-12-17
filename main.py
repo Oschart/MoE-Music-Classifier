@@ -1,4 +1,5 @@
 # %%
+from operator import concat
 import tensorflow as tf
 import numpy as np
 import scipy
@@ -29,17 +30,22 @@ import random
 from SpectroGenerator import SpectroGenerator
 from SpectroExpert import SpectroExpert
 from Combiner import Combiner
-
+from utils import get_superclass_mapping
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 comb = Combiner()
 comb.build_experts()
 # %%
 spect_hist = comb.train_spectro_expert(epochs=1)
 x_train, x_test, y_train, y_test, _, _ = comb.concat_spect_aud()
-terminal_hist, test_loss, test_acc = comb.train_terminal_expert(x_train, x_test, y_train, y_test, epochs=1000)
+terminal_hist, loss, acc = comb.train_terminal_expert(x_train, x_test, y_train, y_test, epochs=1000)
 # %%
 # print(hist.history.keys())
 x_train, x_test, y_train, y_test= comb.get_audio_ft()
-audio_hist, acc, ls = comb.train_audio_expert(x_train, x_test,\
-        y_train, y_test, epochs=1000)
+audio_hist, loss, acc = comb.train_audio_expert(x_train, x_test,\
+        y_train, y_test, epochs=50)
 # accuracy 71 on audio only
+# %%
+# superclassifier training
+mapping = get_superclass_mapping()
+super_hist, loss, acc = comb.train_superclassifier(mapping=mapping, concat=False)
+

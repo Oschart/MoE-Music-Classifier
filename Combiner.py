@@ -17,14 +17,14 @@ from keras.preprocessing.image import ImageDataGenerator
 from PIL import Image
 # Preprocessing
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
 
 from AudioExpert import AudioExpert
 from SpectroExpert import SpectroExpert
 from TerminalExpert import TerminalExpert
 from SpectroGenerator import SpectroGenerator
 from AudioGenerator import AudioGenerator
-
+from SuperClassifier import SuperClassifier
 
 class Combiner():
     def __init__(self, prepare=False):
@@ -32,6 +32,7 @@ class Combiner():
         self.spec_expert = SpectroExpert()
         self.audio_expert = AudioExpert()
         self.terminal_expert = TerminalExpert()
+        self.super_classifier = SuperClassifier()
         if prepare:
             self.prepare_data()
         self.generate_spec_data()
@@ -152,7 +153,6 @@ class Combiner():
         return x_train, x_test, y_train, y_test, y_tr_labels, y_ts_labels
 
     def get_audio_ft(self):
-        from sklearn.preprocessing import OneHotEncoder, StandardScaler
         self.enc = LabelEncoder()
         self.scaler = StandardScaler()
 
@@ -167,7 +167,7 @@ class Combiner():
         x_test = self.scaler.transform(x_test)
         y_test = self.enc.transform(labels_ts)
 
-        return x_train, x_test, y_train, y_test
+        return x_train, x_test, y_train, y_test, labels_tr, labels_ts
 
     def train_terminal_expert(self, x_train, x_test, y_train, y_test, epochs=200):
         self.terminal_expert.build(input_shape=x_train[0].shape, classes=10)
@@ -183,10 +183,35 @@ class Combiner():
         self.audio_expert.build(input_shape=(x_train.shape[1],), classes=10)
         self.audio_expert_hist = self.audio_expert.fit(x_train, y_train,\
                 batch_size=self.batch_size,\
+                validation_data=(x_test, y_test),
                 epochs=epochs
                 )
         test_loss, test_acc = self.audio_expert.evaluate(x_test, y_test)
         return self.audio_expert_hist, test_loss, test_acc
+
+    def train_superclassifier(self, mapping, concat=False, epochs=30):
+        if concat:
+            x_train, x_test, y_train, y_test, _, _ = self.concat_spect_aud()
+        else:
+            x_train, x_test, y_train, y_test, _, _ = self.get_audio_ft()
+
+        y_tr_labels_super = []
+        y_ts_labels_super = []
+        for l in list(self.train_df['genre']):
+            y_tr_labels_super.append(mapping[l])
+        for l in list(self.test_df['genre']):
+            y_ts_labels_super.append(mapping[l])
+        enc = OneHotEncoder()
+        y_train = enc.fit_transform(np.array(y_tr_labels_super).reshape(-1, 1)).toarray()
+        y_test = enc.fit_transform(np.array(y_ts_labels_super).reshape(-1, 1)).toarray()
+        self.super_classifier.build(input_shape=(x_train.shape[1],), classes=len(set(mapping.values())))
+        self.super_classifier_hist = self.super_classifier.fit(x_train, y_train,\
+                batch_size=self.batch_size,\
+                validation_data=(x_test, y_test),
+                epochs=epochs
+                )
+        test_loss, test_acc = self.super_classifier.evaluate(x_test, y_test)
+        return self.super_classifier_hist, test_loss, test_acc
 
     def save_model(self, obj, filename):
         with open(filename+'.pickle', 'wb') as output:  # Overwrites any existing file.
