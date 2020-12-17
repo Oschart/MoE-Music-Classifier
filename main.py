@@ -34,20 +34,8 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 comb = Combiner()
 comb.build_experts()
 
-# %%
-comb.train_experts(epochs=1)
+comb.train_spectro_expert(epochs=1)
+x_train, x_test, y_train, y_test, _, _ = comb.concat_spect_aud()
+hist = comb.train_terminal_expert(x_train, x_test, y_train, y_test)
 
-
-# %%
-print(comb.train_dfx.columns)
-
-# %%
-batch_index = 0
-data_list = []
-while batch_index <= comb.spec_train_gen.batch_index:
-    x, y = comb.spec_train_gen.next()
-    x, y = comb.audio_ft_train.next()
-    data_list.append(x)
-    batch_index = batch_index + 1
-
-# %%
+# print(hist.history.keys())

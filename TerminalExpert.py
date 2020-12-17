@@ -32,7 +32,7 @@ class TerminalExpert():
             layers.Dense(classes, activation='softmax')
         ])
         self.model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
         
     def fit(self, x_train, y_train, **params):
