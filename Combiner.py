@@ -33,6 +33,9 @@ class Combiner():
         self.audio_expert = AudioExpert()
         self.terminal_expert = TerminalExpert()
         self.super_classifier = SuperClassifier()
+        self.sub_classifierJCB = SuperClassifier()
+        self.sub_classifierRH = SuperClassifier()
+        self.sub_classifierRC = SuperClassifier()
         if prepare:
             self.prepare_data()
         self.generate_spec_data()
@@ -153,7 +156,7 @@ class Combiner():
         return x_train, x_test, y_train, y_test, y_tr_labels, y_ts_labels
 
     def get_audio_ft(self):
-        self.enc = LabelEncoder()
+        self.enc = OneHotEncoder()
         self.scaler = StandardScaler()
 
         labels_tr = np.array(self.train_df['genre']).reshape(-1, 1)
@@ -161,11 +164,11 @@ class Combiner():
 
         x_train = np.array(self.train_dfx.values, dtype=float)
         x_train = self.scaler.fit_transform(x_train)
-        y_train = self.enc.fit_transform(labels_tr)
+        y_train = self.enc.fit_transform(labels_tr).toarray()
 
         x_test = np.array(self.test_dfx.values, dtype=float)
         x_test = self.scaler.transform(x_test)
-        y_test = self.enc.transform(labels_ts)
+        y_test = self.enc.transform(labels_ts).toarray()
 
         return x_train, x_test, y_train, y_test, labels_tr, labels_ts
 
@@ -201,9 +204,9 @@ class Combiner():
             y_tr_labels_super.append(mapping[l])
         for l in list(self.test_df['genre']):
             y_ts_labels_super.append(mapping[l])
-        enc = OneHotEncoder()
-        y_train = enc.fit_transform(np.array(y_tr_labels_super).reshape(-1, 1)).toarray()
-        y_test = enc.fit_transform(np.array(y_ts_labels_super).reshape(-1, 1)).toarray()
+        self.super_enc = OneHotEncoder()
+        y_train = self.super_enc.fit_transform(np.array(y_tr_labels_super).reshape(-1, 1)).toarray()
+        y_test = self.super_enc.fit_transform(np.array(y_ts_labels_super).reshape(-1, 1)).toarray()
         self.super_classifier.build(input_shape=(x_train.shape[1],), classes=len(set(mapping.values())))
         self.super_classifier_hist = self.super_classifier.fit(x_train, y_train,\
                 batch_size=self.batch_size,\
@@ -212,6 +215,55 @@ class Combiner():
                 )
         test_loss, test_acc = self.super_classifier.evaluate(x_test, y_test)
         return self.super_classifier_hist, test_loss, test_acc
+
+    def train_subclassifiers(self, concat=False, epochs=200):
+        if concat:
+            x_train, x_test, y_train, y_test, _, _ = self.concat_spect_aud()
+        else:
+            x_train, x_test, y_train, y_test, _, _ = self.get_audio_ft()
+
+        x_train_JCB, y_train_JCB = [], []
+        x_train_RH, y_train_RH = [], []
+        x_train_RC, y_train_RC = [], []
+        i = 0
+        # there are no metal, disco or pop experts since it is a single-valued ccategory
+        for (x, y) in zip(x_train, y_train):
+            y_pred = self.super_classifier.predict(x.reshape(1,-1))
+            super_category = self.super_enc.inverse_transform(y_pred)
+
+            if super_category == 'JCB':
+                x_train_JCB.append(x)
+                y_train_JCB.append(y)
+            elif super_category == 'RH':
+                x_train_RH.append(x)
+                y_train_RH.append(y)
+            elif super_category == 'RC':
+                x_train_RC.append(x)
+                y_train_RC.append(y)
+            continue
+        x_train_JCB, y_train_JCB = np.array(x_train_JCB), np.array(y_train_JCB)
+        x_train_RH, y_train_RH = np.array(x_train_RH), np.array(y_train_RH)
+        x_train_RC, y_train_RC = np.array(x_train_RC), np.array(y_train_RC)
+        print(x_train_JCB.shape, y_train_JCB.shape)
+
+        if len(y_train_JCB) >0:
+            self.sub_classifierJCB.build(input_shape=x_train_JCB[0].shape, classes=10)
+            self.sub_classifierJCB_hist = self.sub_classifierJCB.fit(x_train_JCB, y_train_JCB,\
+                    batch_size=self.batch_size,\
+                    epochs=epochs
+                        )
+        if len(y_train_RH) >0:
+            self.sub_classifierRH.build(input_shape=x_train_RH[0].shape, classes=10)
+            self.sub_classifierRH_hist = self.sub_classifierRH.fit(x_train_RH, y_train_RH,\
+                    batch_size=self.batch_size,\
+                    epochs=epochs
+                        )
+        if len(x_train_RC) > 0:
+            self.sub_classifierRC.build(input_shape=x_train_RC[0].shape, classes=10)
+            self.sub_classifierRC_hist = self.sub_classifierRC.fit(x_train_RC, y_train_RC,\
+                    batch_size=self.batch_size,\
+                    epochs=epochs
+                        )
 
     def save_model(self, obj, filename):
         with open(filename+'.pickle', 'wb') as output:  # Overwrites any existing file.

@@ -34,7 +34,7 @@ class AudioExpert():
         ])
         Adam = optimizers.Adam(learning_rate=learning_rate)
         self.model.compile(optimizer=Adam,
-              loss='sparse_categorical_crossentropy',
+              loss='categorical_crossentropy',
               metrics=['accuracy'])
         
     def fit(self, x_train, y_train, **params):
