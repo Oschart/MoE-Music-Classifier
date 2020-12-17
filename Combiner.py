@@ -97,19 +97,14 @@ class Combiner():
         self.spec_expert_hist = self.spec_expert.fit_gen(self.spec_train_gen, epochs=epochs,
                                  validation_data=self.spec_test_gen)
         self.spec_expert.build_core_model()
-        return
+        return self.spec_expert_hist
     
     def predict(self, x_test):
         spec_features = self.spec_expert.predict(x_test)
-        # audio_features = self.audio_expert.predict(x_test)
-
-        # combined_features = np.concatenate(
-        #    [spec_features, audio_features], axis=1)
-
         return spec_features
+
     def concat_spect_aud(self):
         batch_index = 0
-        data_list = []
         x_train = []
         y_train = []
         print("Starting concat_spect_aud...")
@@ -131,7 +126,6 @@ class Combiner():
 
         # get test data from gens
         batch_index = 0
-        data_list = []
         x_test = []
         y_test = []
         while batch_index <= self.spec_test_gen.batch_index:
@@ -143,6 +137,7 @@ class Combiner():
             x_test.append(np.array(x_spec_aud))
             y_test.append(np.array(y_spec))
             batch_index = batch_index + 1
+
         unbatched_x_test = [sample.reshape(1, x_spec_aud.shape[1]) for batch in x_test for sample in batch]
         x_test = np.array(unbatched_x_test).reshape(len(unbatched_x_test), 154)
         unbatched_y_test = [sample.reshape(1, y_spec.shape[1]) for batch in y_test for sample in batch]
@@ -155,12 +150,13 @@ class Combiner():
 
     def train_terminal_expert(self, x_train, x_test, y_train, y_test, epochs=200):
         self.terminal_expert.build(input_shape=x_train[0].shape, classes=10)
-        hist = self.terminal_expert.fit(x_train, y_train,\
+        self.terminal_expert_hist = self.terminal_expert.fit(x_train, y_train,\
                 batch_size=self.batch_size,\
                 validation_data=(x_test, y_test),\
                 epochs=epochs
                     )
-        return hist
+        return self.terminal_expert_hist
+    
     def save_model(self, obj, filename):
         with open(filename+'.pickle', 'wb') as output:  # Overwrites any existing file.
             pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)

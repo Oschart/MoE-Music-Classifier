@@ -34,8 +34,8 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 comb = Combiner()
 comb.build_experts()
 
-comb.train_spectro_expert(epochs=1)
+spect_hist = comb.train_spectro_expert(epochs=1)
 x_train, x_test, y_train, y_test, _, _ = comb.concat_spect_aud()
-hist = comb.train_terminal_expert(x_train, x_test, y_train, y_test)
+terminal_hist = comb.train_terminal_expert(x_train, x_test, y_train, y_test)
 
 # print(hist.history.keys())
