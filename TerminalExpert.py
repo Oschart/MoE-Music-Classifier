@@ -29,6 +29,8 @@ class TerminalExpert():
             layers.Dense(256, activation='relu'),
             layers.Dense(128, activation='relu'),
             layers.Dense(64, activation='relu'),
+            layers.Dense(32, activation='relu'),
+            layers.Dense(32, activation='relu'),
             layers.Dense(classes, activation='softmax')
         ])
         self.model.compile(optimizer='adam',
